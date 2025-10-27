@@ -11,10 +11,15 @@ app = Flask(__name__)
 # set by Cloud Run during deployment.
 try:
     PROJECT_ID = os.environ.get("PROJECT_ID")
-    TABLE_ID = f"{PROJECT_ID}.my_bq_dataset.customers"
+    # THIS LINE IS CORRECT - It reads the full TABLE_ID from the environment
+    TABLE_ID = os.environ.get("TABLE_ID")
+    # Add checks and logging for the TABLE_ID
+    if not TABLE_ID:
+        raise ValueError("TABLE_ID environment variable not set or empty")
+    print(f"INFO: Using BigQuery Table ID: {TABLE_ID}")
     bq_client = bigquery.Client()
 except Exception as e:
-    print(f"ERROR: Failed to initialize BigQuery client: {e}")
+    print(f"ERROR: Failed to initialize BigQuery client or get TABLE_ID: {e}")
     bq_client = None
 
 @app.route("/", methods=["POST"])
@@ -113,3 +118,4 @@ def run_bq_merge(data):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+
